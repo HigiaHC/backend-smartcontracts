@@ -1,16 +1,22 @@
+# get the base image from docker-compose file 
 FROM higia/blockchain-base:1.0.0
 
+# set the working directory
 RUN mkdir -p /home/app
 WORKDIR /home/app
 
+# copy package configs
 COPY package.json /home/app
 COPY package-lock.json /home/app
 
+# install dependencies
 RUN npm install --quiet
 
+# copy source code
 COPY truffle-config/development.js /home/app/truffle-config.js
 COPY src/contracts /home/app/contracts
 COPY migrations /home/app/migrations/
 COPY test /home/app/test/
 
+# cmd the version for debugging purposes
 CMD ["truffle", "version"]
