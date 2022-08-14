@@ -4,7 +4,7 @@ require('babel-polyfill');
 module.exports = {
     networks: {
         development: {
-            host: 'higia-blockchain-ganache',
+            host: 'higia.blockchain.ganache',
             port: 8545,
             network_id: '*'
         },
