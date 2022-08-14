@@ -14,9 +14,16 @@ RUN npm install --quiet
 
 # copy source code
 COPY truffle-config/development.js /home/app/truffle-config.js
-COPY src/contracts /home/app/contracts
-COPY migrations /home/app/migrations/
-COPY test /home/app/test/
+COPY src/contracts/ /home/app/contracts/
+COPY migrations/ /home/app/migrations/
+COPY test/ /home/app/test/
 
 # cmd the version for debugging purposes
 CMD ["truffle", "version"]
+
+# RUN ["truffle", "compile"]
+
+# RUN ["truffle", "migrate"]
+
+# this command line can be used to keep the container running for debugging purposes
+ENTRYPOINT [ "tail", "-f", "/dev/null" ]
