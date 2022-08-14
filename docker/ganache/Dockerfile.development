@@ -1,7 +1,11 @@
-FROM higia/blockchain-base:1.0.0
+# get the base image from docker-compose file 
+FROM higia/blockchain-base:1.0.0 
 
+# creates the directory and expose the port
 RUN mkdir -p /home
 WORKDIR /home
 EXPOSE 8545
 
-ENTRYPOINT [ "ganache-cli", "-h 0.0.0.0" ]
+# ENTRYPOINT [ "ganache-cli", "-h 0.0.0.0" ] # for some reason, running this entrypoint does not work, so I run this command on docker-compose file
+
+# ENTRYPOINT ["tail", "-f", "/dev/null"] # this command line can be used to keep the container running for debugging purposes
