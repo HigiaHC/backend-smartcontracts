@@ -13,7 +13,7 @@ COPY package-lock.json /home/app
 RUN npm install --quiet
 
 # copy source code
-COPY truffle-config/development.js /home/app/truffle-config.js
+COPY docker/truffle/config/development.js /home/app/truffle-config.js
 COPY src/contracts/ /home/app/contracts/
 COPY migrations/ /home/app/migrations/
 COPY test/ /home/app/test/
