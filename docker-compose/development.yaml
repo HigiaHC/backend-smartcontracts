@@ -27,12 +27,12 @@ services:
       context: ../
       dockerfile: docker/truffle/Dockerfile.development
     depends_on:
-      - higia-blockchain-ganache
+      - higia.blockchain.ganache
 
   # this service runs ganache server
-  higia-blockchain-ganache:
+  higia.blockchain.ganache:
     <<: *blockchain-common
-    container_name: higia-blockchain-ganache
+    container_name: higia.blockchain.ganache
     image: higia/blockchain-ganache:1.0.0
     build:
       context: ../
