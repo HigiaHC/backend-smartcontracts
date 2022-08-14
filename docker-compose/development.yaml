@@ -1,0 +1,47 @@
+version: "3.9"
+
+# set some common properties
+x-blockchain-common: 
+  &blockchain-common
+  restart: on-failure
+  depends_on:
+    - higia.blockchain.base
+  networks:
+    - higia-blockchain
+
+services:
+  # this service builds a common image so it can be used for both truffle and ganache
+  higia.blockchain.base:
+    container_name: higia.blockchain.base
+    image: higia/blockchain-base:1.0.0
+    build:
+      context: ../docker/base
+      dockerfile: Dockerfile.development
+
+  # this service setup all the environment for ganache
+  higia.blockchain.truffle:
+    <<: *blockchain-common
+    container_name: higia.blockchain.truffle
+    image: higia/blockchain-truffle:1.0.0
+    build:
+      context: ../
+      dockerfile: docker/truffle/Dockerfile.development
+    depends_on:
+      - higia.blockchain.ganache
+
+  # this service runs ganache server
+  higia.blockchain.ganache:
+    <<: *blockchain-common
+    container_name: higia.blockchain.ganache
+    image: higia/blockchain-ganache:1.0.0
+    build:
+      context: ../
+      dockerfile: docker/ganache/Dockerfile.development
+    ports:
+      - 8545:8545
+    command: "ganache -h 0.0.0.0"
+
+
+networks:
+  higia-blockchain:
+    driver: bridge

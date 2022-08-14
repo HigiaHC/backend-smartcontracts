@@ -1,0 +1,13 @@
+# get image from official repository
+FROM node:16-bullseye-slim
+
+# install essential packages
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    build-essential \
+    python3 && \
+    rm -fr /var/lib/apt/lists/* && \
+    rm -rf /etc/apt/sources.list.d/*
+
+# install truffle and ganache globally for this base image
+RUN npm install --location=global --quiet npm truffle ganache
