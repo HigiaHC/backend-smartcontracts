@@ -5,6 +5,7 @@ contract Reference {
     struct User {
         string name;
         string password;
+        string token;
         bool isValue;
     }
 
@@ -21,6 +22,32 @@ contract Reference {
         _;
     }
 
+    modifier requireRealUser() {
+        require(users[msg.sender].isValue, "user_does_not_exist");
+        _;
+    }
+
+    function isEqual(string memory _a, string memory _b)
+        private
+        pure
+        returns (bool)
+    {
+        return keccak256(bytes(_a)) == keccak256(bytes(_b));
+    }
+
+    function contains(string[] memory _array, string memory _term)
+        private
+        pure
+        returns (bool)
+    {
+        for (uint256 i = 0; i < _array.length; i++) {
+            if (isEqual(_array[i], _term)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // VERY IMPORTANT!!!!!!!!!!!!!!!
     // This function should exists only for testing purposes.
     // DO NOT USE IT IN PRODUCTION!
@@ -35,16 +62,24 @@ contract Reference {
     // }
 
     // authenticate a user for token creation
-    function auth(string memory _name, string memory _password)
-        public
-        view
-        returns (bool)
-    {
-        User memory user = users[msg.sender]; // get user from storage
+    function auth(
+        string memory _name,
+        string memory _password,
+        string memory _token
+    ) public requireRealUser returns (bool) {
+        User storage user = users[msg.sender]; // get user from storage
+
         // check if user has been authenticated
-        return
-            keccak256(bytes(user.name)) == keccak256(bytes(_name)) &&
-            keccak256(bytes(user.password)) == keccak256(bytes(_password));
+        bool isAuthenticated = isEqual(user.name, _name) &&
+            isEqual(user.password, _password);
+
+        // if user is authenticated, set token
+        if (isAuthenticated) {
+            user.token = _token;
+            return true;
+        }
+
+        return false;
     }
 
     // create a new user
@@ -64,5 +99,36 @@ contract Reference {
 
     function getUser(address _user) public view returns (User memory) {
         return users[_user];
+    }
+
+    function createReference(string memory _reference, string memory _token)
+        public
+        requireRealUser
+        returns (bool)
+    {
+        // check if user is authorized
+        require(isEqual(users[msg.sender].token, _token), "invalid_token");
+
+        // check if reference is already registered
+        require(
+            !contains(references[msg.sender], _reference),
+            "reference_already_exists"
+        );
+
+        // add reference to user's references
+        references[msg.sender].push(_reference);
+        return true;
+    }
+
+    function getReferences(string memory _token)
+        public
+        view
+        requireRealUser
+        returns (string[] memory)
+    {
+        // check if user is authorized
+        require(isEqual(users[msg.sender].token, _token), "invalid_token");
+
+        return references[msg.sender];
     }
 }
