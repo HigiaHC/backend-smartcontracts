@@ -1,3 +1,4 @@
+const uuid = require('uuid');
 const { assert } = require('chai');
 const { contracts_build_directory } = require('../truffle-config');
 
@@ -14,12 +15,14 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
     let user1 = {
         address: address1,
         name: 'user1',
-        password: 'password1'
+        password: 'password1',
+        token: uuid.v4()
     };
     let user2 = {
         address: address2,
         name: 'user2',
-        password: 'password2'
+        password: 'password2',
+        token: uuid.v4()
     };
 
     let users = [user1, user2]; // user array
@@ -45,6 +48,7 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
         // assert that user1 is added to the user list
         it('user can be added', async () => {
             await reference.addUser(user1.name, user1.password, { from: user1.address });
+            await reference.addUser(user2.name, user2.password, { from: user2.address });
 
             // verify that user1 is in the user list
             const user = await reference.getUser(user1.address);
@@ -63,6 +67,66 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
                 });
             assert.equal(userExists, true);
             assert.equal(message, 'user_already_exists');
+        });
+    });
+
+    // auth section
+    describe('authenticate', async () => {
+        // assert that user1 can authenticate
+        it('user can authenticate', async () => {
+            const authenticated = await reference.auth(user1.name, user1.password, user1.token, { from: user1.address });
+            console.log(authenticated);
+            assert.equal(authenticated, true);
+
+            const user = await reference.getUser(user1.address);
+            assert.equal(user.token, user1.token);
+        });
+
+        it('user gives wrong name', async () => {
+            const authenticated = await reference.auth(user2.name, user1.password, user1.token, { from: user1.address });
+            assert.equal(authenticated, false);
+        });
+
+        it('user gives wrong password', async () => {
+            const authenticated = await reference.auth(user1.name, user2.password, user1.token, { from: user1.address });
+            assert.equal(authenticated, false);
+        });
+
+        // TODO: corrigir essa mensagem
+        // it('user does not exist', async () => {
+        //     let userExists = true;
+        //     let message = '';
+        //     await reference.auth(user1.name, user2.password, user1.token, { from: address3 })
+        //         .catch((error) => {
+        //             message = error.reason;
+        //             userExists = false;
+        //         });
+        //     assert.equal(userExists, false);
+        //     assert.equal(message, 'user_does_not_exist');
+        // });
+    });
+
+    // reference section
+    describe('reference', async () => {
+        // assert that user1 can add a reference
+        it('user can add a reference', async () => {
+            // auth user2
+            const authenticated = await reference.auth(user2.name, user2.password, user2.token, { from: user2.address });
+            assert.equal(authenticated, true);
+
+            // verify that user1 is in the user list
+            const user = await reference.getUser(user2.address);
+            console.log(user);
+            console.log(user2);
+
+
+            let referenceString = uuid.v4();
+            let referenceAdded = await reference.createReference(referenceString, user2.token, { from: user2.address });
+            assert.equal(referenceAdded, true);
+
+            // verify that reference1 is in the reference list
+            const references = await reference.getReferences(user2.token);
+            assert.equal(references.includes(referenceString), true);
         });
     });
 });
