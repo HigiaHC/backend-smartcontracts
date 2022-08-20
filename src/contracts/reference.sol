@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.5.0 <0.9.0;
 
+import "../utils/utilities.sol";
+
 contract Reference {
+    using Utilities for *;
+
     struct User {
         string name;
         string password;
@@ -27,39 +31,18 @@ contract Reference {
         _;
     }
 
-    function isEqual(string memory _a, string memory _b)
-        private
-        pure
-        returns (bool)
-    {
-        return keccak256(bytes(_a)) == keccak256(bytes(_b));
-    }
-
     function contains(string[] memory _array, string memory _term)
         private
         pure
         returns (bool)
     {
         for (uint256 i = 0; i < _array.length; i++) {
-            if (isEqual(_array[i], _term)) {
+            if (_array[i].equals(_term)) {
                 return true;
             }
         }
         return false;
     }
-
-    // VERY IMPORTANT!!!!!!!!!!!!!!!
-    // This function should exists only for testing purposes.
-    // DO NOT USE IT IN PRODUCTION!
-    // function clearUser(address _user)
-    //     public
-    //     authorizeManager
-    //     returns (bool)
-    // {
-    //     users.delete(_user);
-    //     references.delete(_user);
-    //     return true;
-    // }
 
     // authenticate a user for token creation
     function auth(
@@ -70,8 +53,8 @@ contract Reference {
         User storage user = users[msg.sender]; // get user from storage
 
         // check if user has been authenticated
-        bool isAuthenticated = isEqual(user.name, _name) &&
-            isEqual(user.password, _password);
+        bool isAuthenticated = user.name.equals(_name) &&
+            user.password.equals(_password);
 
         // if user is authenticated, set token
         if (isAuthenticated) {
@@ -107,7 +90,7 @@ contract Reference {
         returns (bool)
     {
         // check if user is authorized
-        require(isEqual(users[msg.sender].token, _token), "invalid_token");
+        require(users[msg.sender].token.equals(_token), "invalid_token");
 
         // check if reference is already registered
         require(
@@ -127,7 +110,7 @@ contract Reference {
         returns (string[] memory)
     {
         // check if user is authorized
-        require(isEqual(users[msg.sender].token, _token), "invalid_token");
+        require(users[msg.sender].token.equals(_token), "invalid_token");
 
         return references[msg.sender];
     }
