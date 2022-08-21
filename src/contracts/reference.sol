@@ -4,8 +4,6 @@ pragma solidity >=0.5.0 <0.9.0;
 import "../utils/utilities.sol";
 
 contract Reference {
-    using Utilities for *;
-
     struct User {
         string name;
         string password;
@@ -21,6 +19,8 @@ contract Reference {
         manager = msg.sender;
     }
 
+    event ActionResult(address user, bool success);
+
     modifier authorizeManager() {
         require(msg.sender == manager);
         _;
@@ -31,13 +31,21 @@ contract Reference {
         _;
     }
 
+    function equals(string memory _a, string memory _b)
+        private
+        pure
+        returns (bool)
+    {
+        return keccak256(bytes(_a)) == keccak256(bytes(_b));
+    }
+
     function contains(string[] memory _array, string memory _term)
         private
         pure
         returns (bool)
     {
         for (uint256 i = 0; i < _array.length; i++) {
-            if (_array[i].equals(_term)) {
+            if (equals(_array[i], _term)) {
                 return true;
             }
         }
@@ -53,15 +61,17 @@ contract Reference {
         User storage user = users[msg.sender]; // get user from storage
 
         // check if user has been authenticated
-        bool isAuthenticated = user.name.equals(_name) &&
-            user.password.equals(_password);
+        bool isAuthenticated = equals(user.name, _name) &&
+            equals(user.password, _password);
 
         // if user is authenticated, set token
         if (isAuthenticated) {
             user.token = _token;
+            emit ActionResult(msg.sender, true);
             return true;
         }
 
+        emit ActionResult(msg.sender, false);
         return false;
     }
 
@@ -90,7 +100,7 @@ contract Reference {
         returns (bool)
     {
         // check if user is authorized
-        require(users[msg.sender].token.equals(_token), "invalid_token");
+        require(equals(users[msg.sender].token, _token), "invalid_token");
 
         // check if reference is already registered
         require(
@@ -100,6 +110,7 @@ contract Reference {
 
         // add reference to user's references
         references[msg.sender].push(_reference);
+        emit ActionResult(msg.sender, true);
         return true;
     }
 
@@ -110,7 +121,7 @@ contract Reference {
         returns (string[] memory)
     {
         // check if user is authorized
-        require(users[msg.sender].token.equals(_token), "invalid_token");
+        require(equals(users[msg.sender].token, _token), "invalid_token");
 
         return references[msg.sender];
     }
