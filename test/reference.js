@@ -27,6 +27,8 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
 
     let users = [user1, user2]; // user array
 
+    let referenceString = uuid.v4(); // reference string
+
     before(async () => {
         reference = await Reference.deployed(); // deploy test contract
     });
@@ -75,8 +77,8 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
         // assert that user1 can authenticate
         it('user can authenticate', async () => {
             const authenticated = await reference.auth(user1.name, user1.password, user1.token, { from: user1.address });
-            console.log(authenticated);
-            assert.equal(authenticated, true);
+            let result = authenticated.logs[0].args.success;
+            assert.equal(result, true);
 
             const user = await reference.getUser(user1.address);
             assert.equal(user.token, user1.token);
@@ -84,26 +86,28 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
 
         it('user gives wrong name', async () => {
             const authenticated = await reference.auth(user2.name, user1.password, user1.token, { from: user1.address });
-            assert.equal(authenticated, false);
+            let result = authenticated.logs[0].args.success;
+            assert.equal(result, false);
         });
 
         it('user gives wrong password', async () => {
             const authenticated = await reference.auth(user1.name, user2.password, user1.token, { from: user1.address });
-            assert.equal(authenticated, false);
+            let result = authenticated.logs[0].args.success;
+            assert.equal(result, false);
         });
 
         // TODO: corrigir essa mensagem
-        // it('user does not exist', async () => {
-        //     let userExists = true;
-        //     let message = '';
-        //     await reference.auth(user1.name, user2.password, user1.token, { from: address3 })
-        //         .catch((error) => {
-        //             message = error.reason;
-        //             userExists = false;
-        //         });
-        //     assert.equal(userExists, false);
-        //     assert.equal(message, 'user_does_not_exist');
-        // });
+        it('user does not exist', async () => {
+            let userExists = true;
+            let message = '';
+            await reference.auth(user1.name, user2.password, user1.token, { from: address3 })
+                .catch((error) => {
+                    message = error.reason;
+                    userExists = false;
+                });
+            assert.equal(userExists, false);
+            assert.equal(message, 'user_does_not_exist');
+        });
     });
 
     // reference section
@@ -112,20 +116,20 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
         it('user can add a reference', async () => {
             // auth user2
             const authenticated = await reference.auth(user2.name, user2.password, user2.token, { from: user2.address });
-            assert.equal(authenticated, true);
+            let result = authenticated.logs[0].args.success;
+            assert.equal(result, true);
 
             // verify that user1 is in the user list
             const user = await reference.getUser(user2.address);
-            console.log(user);
-            console.log(user2);
+            assert.equal(user.name, user2.name);
 
 
-            let referenceString = uuid.v4();
             let referenceAdded = await reference.createReference(referenceString, user2.token, { from: user2.address });
-            assert.equal(referenceAdded, true);
+            let referenceResult = referenceAdded.logs[0].args.success;
+            assert.equal(referenceResult, true);
 
             // verify that reference1 is in the reference list
-            const references = await reference.getReferences(user2.token);
+            const references = await reference.getReferences(user2.token, { from: user2.address });
             assert.equal(references.includes(referenceString), true);
         });
     });
