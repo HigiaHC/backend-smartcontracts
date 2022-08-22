@@ -81,7 +81,7 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
             assert.equal(result, true);
 
             const user = await reference.getUser(user1.address);
-            assert.equal(user.token, user1.token);
+            assert.equal(user.token.value, await reference.encrypt(user1.token));
         });
 
         it('user gives wrong name', async () => {
@@ -96,7 +96,6 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
             assert.equal(result, false);
         });
 
-        // TODO: corrigir essa mensagem
         it('user does not exist', async () => {
             let userExists = true;
             let message = '';
@@ -111,7 +110,7 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
     });
 
     // reference section
-    describe('reference', async () => {
+    describe('create reference', async () => {
         // assert that user1 can add a reference
         it('user can add a reference', async () => {
             // auth user2
@@ -131,6 +130,59 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
             // verify that reference1 is in the reference list
             const references = await reference.getReferences(user2.token, { from: user2.address });
             assert.equal(references.includes(referenceString), true);
+        });
+
+        it('reference already exists', async () => {
+            let referenceExists = false;
+            let message = '';
+            await reference.createReference(referenceString, user2.token, { from: user2.address })
+                .catch((error) => {
+                    message = error.reason;
+                    referenceExists = true;
+                });
+            assert.equal(referenceExists, true);
+            assert.equal(message, 'reference_already_exists');
+        });
+
+        it('user sends invalid token', async () => {
+            let validToken = true;
+            let message = '';
+            await reference.createReference(referenceString, user1.token, { from: user2.address })
+                .catch((error) => {
+                    message = error.reason;
+                    validToken = false;
+                });
+            assert.equal(validToken, false);
+            assert.equal(message, 'invalid_token');
+        });
+    });
+
+    describe('get reference', async () => {
+        it('user can get reference', async () => {
+            // auth user2
+            const authenticated = await reference.auth(user2.name, user2.password, user2.token, { from: user2.address });
+            let result = authenticated.logs[0].args.success;
+            assert.equal(result, true);
+
+            // verify that user1 is in the user list
+            const user = await reference.getUser(user2.address);
+            assert.equal(user.name, user2.name);
+
+            // verify that reference1 is in the reference list
+            const references = await reference.getReferences(user2.token, { from: user2.address });
+            assert.equal(references.includes(referenceString), true);
+        });
+
+        it('user sends invalid token', async () => {
+            let validToken = true;
+            let message = '';
+            await reference.getReferences(user1.token, { from: user2.address })
+                .catch((error) => {
+                    message = error.reason;
+                    validToken = false;
+                });
+            assert.equal(validToken, false);
+            // assert.equal(message, 'invalid_token');
         });
     });
 });
