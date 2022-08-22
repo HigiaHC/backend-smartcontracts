@@ -13,11 +13,18 @@ contract Reference {
 
     struct User {
         string name;
-        string password;
+        bytes32 password;
         Token token;
+        Token sharingToken;
         bool isValue;
     }
 
+    struct Account {
+        address add;
+        string name;
+    }
+
+    Account[] public accounts;
     mapping(address => User) public users;
     mapping(address => string[]) public references;
     address public manager;
@@ -77,7 +84,7 @@ contract Reference {
 
         // check if user has been authenticated
         bool isAuthenticated = equals(user.name, _name) &&
-            equals(user.password, _password);
+            equals(user.password, encrypt(_password));
 
         // if user is authenticated, set token
         if (isAuthenticated) {
@@ -100,14 +107,20 @@ contract Reference {
         require(!users[msg.sender].isValue, "user_already_exists");
 
         // register user
+        accounts.push(Account({add: msg.sender, name: _name}));
+
         users[msg.sender].name = _name;
-        users[msg.sender].password = _password;
+        users[msg.sender].password = encrypt(_password);
         users[msg.sender].isValue = true;
         return true;
     }
 
     function getUser(address _user) public view returns (User memory) {
         return users[_user];
+    }
+
+    function getUsers() public view returns (Account[] memory) {
+        return accounts;
     }
 
     function createReference(string memory _reference, string memory _token)
@@ -152,6 +165,77 @@ contract Reference {
         //TODO: test if token is expired
         // require(
         //     users[msg.sender].token.timestamp + UNIX_DAY > block.timestamp,
+        //     "token_expired"
+        // );
+
+        return references[msg.sender];
+    }
+
+    // share functions
+    function share(
+        string memory _name,
+        string memory _password,
+        string memory _token
+    ) public requireRealUser returns (bool) {
+        User storage user = users[msg.sender]; // get user from storage
+
+        // check if user has been authenticated
+        bool isAuthenticated = equals(user.name, _name) &&
+            equals(user.password, encrypt(_password));
+
+        // if user is authenticated, set token
+        if (isAuthenticated) {
+            user.sharingToken.value = encrypt(_token);
+            user.sharingToken.timestamp = block.timestamp;
+            emit ActionResult(msg.sender, true);
+            return true;
+        }
+
+        emit ActionResult(msg.sender, false);
+        return false;
+    }
+
+    function createSharedReference(
+        string memory _reference,
+        string memory _token
+    ) public requireRealUser returns (bool) {
+        // check if user is authorized
+        require(
+            equals(users[msg.sender].sharingToken.value, encrypt(_token)),
+            "invalid_token"
+        );
+        //TODO: test if token is expired
+        // require(
+        //     users[msg.sender].sharingToken.timestamp + UNIX_DAY > block.timestamp,
+        //     "token_expired"
+        // );
+
+        // check if reference is already registered
+        require(
+            !contains(references[msg.sender], _reference),
+            "reference_already_exists"
+        );
+
+        // add reference to user's references
+        references[msg.sender].push(_reference);
+        emit ActionResult(msg.sender, true);
+        return true;
+    }
+
+    function sharedReferences(string memory _token)
+        public
+        view
+        requireRealUser
+        returns (string[] memory)
+    {
+        // check if user is authorized
+        require(
+            equals(users[msg.sender].sharingToken.value, encrypt(_token)),
+            "invalid_token"
+        );
+        //TODO: test if token is expired
+        // require(
+        //     users[msg.sender].sharingToken.timestamp + UNIX_DAY > block.timestamp,
         //     "token_expired"
         // );
 
