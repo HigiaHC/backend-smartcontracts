@@ -55,7 +55,7 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
             // verify that user1 is in the user list
             const user = await reference.getUser(user1.address);
             assert.equal(user.name, user1.name);
-            assert.equal(user.password, user1.password);
+            assert.equal(user.password, await reference.encrypt(user1.password));
         });
 
         // assert that user1 address cannot be added twice
