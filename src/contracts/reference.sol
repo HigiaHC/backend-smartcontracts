@@ -4,10 +4,17 @@ pragma solidity >=0.5.0 <0.9.0;
 import "../utils/utilities.sol";
 
 contract Reference {
+    uint256 public constant UNIX_DAY = 86400;
+
+    struct Token {
+        bytes32 value;
+        uint256 timestamp;
+    }
+
     struct User {
         string name;
         string password;
-        string token;
+        Token token;
         bool isValue;
     }
 
@@ -39,6 +46,10 @@ contract Reference {
         return keccak256(bytes(_a)) == keccak256(bytes(_b));
     }
 
+    function equals(bytes32 _a, bytes32 _b) private pure returns (bool) {
+        return _a == _b;
+    }
+
     function contains(string[] memory _array, string memory _term)
         private
         pure
@@ -50,6 +61,10 @@ contract Reference {
             }
         }
         return false;
+    }
+
+    function encrypt(string memory _string) public pure returns (bytes32) {
+        return keccak256(bytes(_string));
     }
 
     // authenticate a user for token creation
@@ -66,7 +81,8 @@ contract Reference {
 
         // if user is authenticated, set token
         if (isAuthenticated) {
-            user.token = _token;
+            user.token.value = encrypt(_token);
+            user.token.timestamp = block.timestamp;
             emit ActionResult(msg.sender, true);
             return true;
         }
@@ -100,7 +116,15 @@ contract Reference {
         returns (bool)
     {
         // check if user is authorized
-        require(equals(users[msg.sender].token, _token), "invalid_token");
+        require(
+            equals(users[msg.sender].token.value, encrypt(_token)),
+            "invalid_token"
+        );
+        //TODO: test if token is expired
+        // require(
+        //     users[msg.sender].token.timestamp + UNIX_DAY > block.timestamp,
+        //     "token_expired"
+        // );
 
         // check if reference is already registered
         require(
@@ -121,7 +145,15 @@ contract Reference {
         returns (string[] memory)
     {
         // check if user is authorized
-        require(equals(users[msg.sender].token, _token), "invalid_token");
+        require(
+            equals(users[msg.sender].token.value, encrypt(_token)),
+            "invalid_token"
+        );
+        //TODO: test if token is expired
+        // require(
+        //     users[msg.sender].token.timestamp + UNIX_DAY > block.timestamp,
+        //     "token_expired"
+        // );
 
         return references[msg.sender];
     }
