@@ -33,6 +33,29 @@ contract Reference {
     }
 
     Account[] public accounts;
+    mapping(address => Patient) public patients;
 
     constructor() {}
+
+    function addUser(string memory _name) public returns (bool) {
+        // check if user is already present
+        require(!patients[msg.sender].instanced, "user_already_exists");
+
+        // register user
+        accounts.push(
+            Account({
+                id: msg.sender,
+                name: _name,
+                accountType: uint256(AccountType.Patient)
+            })
+        );
+
+        patients[msg.sender].name = _name;
+        patients[msg.sender].instanced = true;
+        return true;
+    }
+
+    function getUser() public view returns (Patient memory) {
+        return patients[msg.sender];
+    }
 }
