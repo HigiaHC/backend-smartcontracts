@@ -1,5 +1,5 @@
-const Reference = artifacts.require('Reference');
+const References = artifacts.require('References');
 
 module.exports = function (deployer) {
-    deployer.deploy(Reference);
+    deployer.deploy(References);
 }

@@ -1,15 +1,14 @@
 const uuid = require('uuid');
 const { assert } = require('chai');
-const { contracts_build_directory } = require('../truffle-config');
 
-const Reference = artifacts.require('Reference');
+const References = artifacts.require('References');
 
 require('chai')
     .use(require('chai-as-promised'))
     .should();
 
-contract('Reference', ([deployer, address1, address2, address3, address4]) => {
-    let reference; // contract instance
+contract('References', ([deployer, address1, address2, address3, address4]) => {
+    let references; // contract instance
 
     // set of user names and passwords
     let user1 = {
@@ -30,14 +29,14 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
     let referenceString = uuid.v4(); // reference string
 
     before(async () => {
-        reference = await Reference.deployed(); // deploy test contract
+        references = await References.deployed(); // deploy test contract
     });
 
     // deployment section
     describe('deployment', async () => {
         // assert that contract is deployed and has an address
         it('deploys successfully', async () => {
-            const address = await reference.address;
+            const address = await references.address;
             assert.notEqual(address, 0x0);
             assert.notEqual(address, '');
             assert.notEqual(address, null);
@@ -49,11 +48,11 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
     describe('users', async () => {
         // assert that user1 is added to the user list
         it('user can be added', async () => {
-            await reference.addUser(user1.name, { from: user1.address });
-            await reference.addUser(user2.name, { from: user2.address });
+            await references.addUser(user1.name, { from: user1.address });
+            await references.addUser(user2.name, { from: user2.address });
 
             // verify that user1 is in the user list
-            const user = await reference.getUser({ from: user1.address });
+            const user = await references.getUser({ from: user1.address });
             assert.equal(user.name, user1.name);
             // assert.equal(user.password, await reference.encrypt(user1.password));
         });
@@ -62,7 +61,7 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
         it('user already exists', async () => {
             let userExists = false;
             let message = '';
-            await reference.addUser(user2.name, user2.password, { from: user1.address })
+            await references.addUser(user2.name, user2.password, { from: user1.address })
                 .catch((error) => {
                     message = error.reason;
                     userExists = true;
@@ -71,6 +70,30 @@ contract('Reference', ([deployer, address1, address2, address3, address4]) => {
             // assert.equal(message, 'user_already_exists');
         });
     });
+
+    describe('references', async () => {
+        it('user can create a reference', async () => {
+            // assert that a reference can be created
+            await references.createReference(referenceString, 'success reference', 'patient', { from: user1.address });
+
+            let referenceIds = await references.listReferenceIds({ from: user1.address });
+
+            assert.equal(referenceIds.includes(referenceString), true);
+        })
+
+        it('reference already exists', async () => {
+            // assert that duplicate reference cannot be added
+            let referenceExists = false;
+            let message = '';
+            await references.createReference(referenceString, 'duplicate reference', 'patient', { from: user1.address })
+                .catch((error) => {
+                    message = error.reason;
+                    referenceExists = true;
+                });
+            assert.equal(referenceExists, true);
+            assert.equal(message, 'reference_already_exists');
+        })
+    })
 
     // auth section
     // describe('authenticate', async () => {
