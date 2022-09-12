@@ -95,6 +95,20 @@ contract('References', ([deployer, address1, address2, address3, address4]) => {
         })
     })
 
+    describe('patients', async () => {
+        it('can list patients', async () => {
+            let getError = false;
+            let patients = await references.listPatients()
+                .catch((error) => {
+                    console.log(error)
+                    getError = true;
+                });
+            console.log(patients);
+
+            assert.equal(getError, false);
+        })
+    })
+
     // auth section
     // describe('authenticate', async () => {
     //     // assert that user1 can authenticate

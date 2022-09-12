@@ -116,4 +116,8 @@ contract References {
     {
         return references[msg.sender];
     }
+
+    function listPatients() public view returns (Account[] memory) {
+        return accounts;
+    }
 }
