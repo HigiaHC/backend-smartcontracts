@@ -100,12 +100,20 @@ contract('References', ([deployer, address1, address2, address3, address4]) => {
             let getError = false;
             let patients = await references.listPatients()
                 .catch((error) => {
-                    console.log(error)
                     getError = true;
                 });
-            console.log(patients);
 
             assert.equal(getError, false);
+        })
+    })
+
+    describe('token and third party', async () => {
+        it('can create a token', async () => {
+            let token = uuid.v4();
+            await references.createToken(token, { from: user1.address });
+            let tokens = await references.getToken(token, { from: user1.address });
+            console.log(tokens);
+            assert(true, true);
         })
     })
 

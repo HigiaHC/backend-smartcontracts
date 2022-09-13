@@ -33,7 +33,7 @@ library ByteUtils {
         return _a == _b;
     }
 
-    function encrypt(string memory _string) internal pure returns (bytes32) {
+    function getHash(string memory _string) internal pure returns (bytes32) {
         return keccak256(bytes(_string));
     }
 }

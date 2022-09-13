@@ -39,10 +39,21 @@ contract References {
         uint256 date;
     }
 
+    struct Token {
+        bytes32 token;
+        bool valid;
+        uint256 validUntil;
+        uint256 usesLeft;
+        bool instanced;
+    }
+
     Account[] public accounts;
     mapping(address => Patient) public patients;
     mapping(address => Reference[]) public references;
     mapping(address => string[]) public referenceIds;
+
+    //token mappings
+    mapping(address => mapping(bytes32 => Token)) public tokens;
 
     modifier requireInstancedPatient() {
         require(patients[msg.sender].instanced, "user_does_not_exist");
@@ -119,5 +130,82 @@ contract References {
 
     function listPatients() public view returns (Account[] memory) {
         return accounts;
+    }
+
+    function createToken(string memory _token)
+        public
+        requireInstancedPatient
+        returns (bool)
+    {
+        bytes32 tokenHash = _token.getHash();
+
+        tokens[msg.sender][tokenHash] = Token({
+            token: tokenHash,
+            valid: true,
+            validUntil: block.timestamp + UNIX_DAY,
+            usesLeft: 1,
+            instanced: true
+        });
+
+        return true;
+    }
+
+    function getToken(string memory _tokenString)
+        public
+        view
+        returns (Token memory)
+    {
+        bytes32 tokenHash = _tokenString.getHash();
+        return tokens[msg.sender][tokenHash];
+    }
+
+    function listReferencesThird(address _patient, string memory _tokenString)
+        public
+        view
+        returns (Reference[] memory)
+    {
+        bytes32 tokenHash = _tokenString.getHash();
+
+        Token memory token = tokens[_patient][tokenHash];
+        require(token.instanced && token.valid, "invalid_token");
+        require(token.validUntil >= block.timestamp, "expired_token");
+
+        return references[_patient];
+    }
+
+    function createReferenceThird(
+        string memory _tokenString,
+        string memory _id,
+        string memory _name,
+        string memory _type
+    ) public returns (bool) {
+        bytes32 tokenHash = _tokenString.getHash();
+
+        Token memory token = tokens[msg.sender][tokenHash];
+        require(token.instanced && token.valid, "invalid_token");
+        require(token.validUntil >= block.timestamp, "expired_token");
+
+        // check if a reference with this id is instanced
+        require(
+            !referenceIds[msg.sender].contains(_id),
+            "reference_already_exists"
+        );
+
+        //add reference
+        referenceIds[msg.sender].push(_id);
+
+        references[msg.sender].push(
+            Reference({
+                id: _id,
+                name: _name,
+                resourceType: _type,
+                date: block.timestamp
+            })
+        );
+
+        token.usesLeft--;
+        if (token.usesLeft == 0) token.valid = false;
+
+        return true;
     }
 }
