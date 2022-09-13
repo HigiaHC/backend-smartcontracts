@@ -203,8 +203,9 @@ contract References {
             })
         );
 
-        token.usesLeft--;
-        if (token.usesLeft == 0) token.valid = false;
+        tokens[msg.sender][tokenHash].usesLeft--;
+        if (tokens[msg.sender][tokenHash].usesLeft == 0)
+            tokens[msg.sender][tokenHash].valid = false;
 
         return true;
     }

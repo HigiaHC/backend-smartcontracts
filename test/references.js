@@ -27,6 +27,7 @@ contract('References', ([deployer, address1, address2, address3, address4]) => {
     let users = [user1, user2]; // user array
 
     let referenceString = uuid.v4(); // reference string
+    let referenceString2 = uuid.v4(); // reference string
 
     before(async () => {
         references = await References.deployed(); // deploy test contract
@@ -108,12 +109,59 @@ contract('References', ([deployer, address1, address2, address3, address4]) => {
     })
 
     describe('token and third party', async () => {
+        let token = uuid.v4();
         it('can create a token', async () => {
-            let token = uuid.v4();
             await references.createToken(token, { from: user1.address });
             let tokens = await references.getToken(token, { from: user1.address });
-            console.log(tokens);
-            assert(true, true);
+            assert.equal(tokens.valid, true);
+        })
+
+        it('can list patients resources', async () => {
+            let resources = await references.listReferencesThird(user1.address, token);
+            assert.equal(resources[0].name, 'success reference');
+        })
+
+        it('user gives invalid token', async () => {
+            let isValid = true;
+            await references.listReferencesThird(user1.address, uuid.v4())
+                .catch(error => {
+                    isValid = false;
+                })
+
+            assert.equal(isValid, false);
+        })
+
+        it('user can create a reference', async () => {
+
+            let tokenBefore = await references.getToken(token, { from: user1.address });
+
+            assert.equal(tokenBefore.valid, true);
+            assert.equal(tokenBefore.usesLeft, 1);
+
+            // assert that a reference can be created
+            await references.createReferenceThird(token, referenceString2, 'success reference2', 'patient', { from: user1.address });
+
+            let referenceIds = await references.listReferenceIds({ from: user1.address });
+
+            assert.equal(referenceIds.includes(referenceString2), true);
+
+            let tokenAfter = await references.getToken(token, { from: user1.address });
+
+            assert.equal(tokenAfter.valid, false);
+            assert.equal(tokenAfter.usesLeft, 0);
+        })
+
+        it('user passes invalid token', async () => {
+            // assert that duplicate reference cannot be added
+            let referenceExists = false;
+            let message = '';
+            await references.createReferenceThird(token, referenceString2, 'duplicate reference', 'patient', { from: user1.address })
+                .catch((error) => {
+                    message = error.reason;
+                    referenceExists = true;
+                });
+            assert.equal(referenceExists, true);
+            // assert.equal(message, 'reference_already_exists');
         })
     })
 
