@@ -10,7 +10,7 @@
   "sourceMap": "668:262:2:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "668:262:2:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: GPL-3.0\r\npragma solidity >=0.5.0 <0.9.0;\r\n\r\nlibrary StringUtils {\r\n    function equals(string memory _a, string memory _b)\r\n        internal\r\n        pure\r\n        returns (bool)\r\n    {\r\n        return keccak256(bytes(_a)) == keccak256(bytes(_b));\r\n    }\r\n}\r\n\r\nlibrary ArrayUtils {\r\n    using StringUtils for *;\r\n\r\n    function contains(string[] memory _array, string memory _string)\r\n        internal\r\n        pure\r\n        returns (bool)\r\n    {\r\n        for (uint256 i = 0; i < _array.length; i++) {\r\n            if (_array[i].equals(_string)) {\r\n                return true;\r\n            }\r\n        }\r\n        return false;\r\n    }\r\n}\r\n\r\nlibrary ByteUtils {\r\n    function equals(bytes32 _a, bytes32 _b) internal pure returns (bool) {\r\n        return _a == _b;\r\n    }\r\n\r\n    function getHash(string memory _string) internal pure returns (bytes32) {\r\n        return keccak256(bytes(_string));\r\n    }\r\n}\r\n",
-  "sourcePath": "C:\\Users\\b_bri\\Documents\\.higia\\backend-smartcontracts\\src\\utils\\Utilities.sol",
+  "sourcePath": "D:\\.higia\\backend-smartcontracts\\src\\utils\\Utilities.sol",
   "ast": {
     "absolutePath": "project:/src/utils/Utilities.sol",
     "exportedSymbols": {
@@ -1233,7 +1233,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.9",
-  "updatedAt": "2022-09-14T22:52:33.366Z",
+  "updatedAt": "2022-09-18T11:04:11.105Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
