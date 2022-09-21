@@ -35,6 +35,7 @@ contract References {
     struct Reference {
         string id;
         string name;
+        string from;
         string resourceType;
         uint256 date;
     }
@@ -87,7 +88,8 @@ contract References {
     function createReference(
         string memory _id,
         string memory _name,
-        string memory _type
+        string memory _type,
+        string memory _from
     ) public requireInstancedPatient returns (bool) {
         // check if a reference with this id is instanced
         require(
@@ -102,6 +104,7 @@ contract References {
             Reference({
                 id: _id,
                 name: _name,
+                from: _from,
                 resourceType: _type,
                 date: block.timestamp
             })
@@ -159,6 +162,20 @@ contract References {
         return tokens[msg.sender][tokenHash];
     }
 
+    function validateToken(address _address, string memory _tokenString)
+        public
+        view
+        returns (bool)
+    {
+        bytes32 tokenHash = _tokenString.getHash();
+
+        Token memory token = tokens[_address][tokenHash];
+        require(token.instanced && token.valid, "invalid_token");
+        require(token.validUntil >= block.timestamp, "expired_token");
+
+        return true;
+    }
+
     function listReferencesThird(address _patient, string memory _tokenString)
         public
         view
@@ -177,7 +194,8 @@ contract References {
         string memory _tokenString,
         string memory _id,
         string memory _name,
-        string memory _type
+        string memory _type,
+        string memory _from
     ) public returns (bool) {
         bytes32 tokenHash = _tokenString.getHash();
 
@@ -198,6 +216,7 @@ contract References {
             Reference({
                 id: _id,
                 name: _name,
+                from: _from,
                 resourceType: _type,
                 date: block.timestamp
             })
