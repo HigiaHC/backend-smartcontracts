@@ -63,7 +63,7 @@ contract References {
 
     constructor() {}
 
-    function addUser(string memory _name) public returns (bool) {
+    function addUser(string memory _id, string memory _name) public returns (bool) {
         // check if user is already present
         require(!patients[msg.sender].instanced, "user_already_exists");
 
@@ -78,6 +78,9 @@ contract References {
 
         patients[msg.sender].name = _name;
         patients[msg.sender].instanced = true;
+
+        createReference(_id, _name, "Patient", "self");
+
         return true;
     }
 
@@ -96,6 +99,10 @@ contract References {
             !referenceIds[msg.sender].contains(_id),
             "reference_already_exists"
         );
+
+        if(compareStrings(_type, 'Patient') && patients[msg.sender].instanced){
+            return false;
+        }
 
         //add reference
         referenceIds[msg.sender].push(_id);
@@ -227,5 +234,26 @@ contract References {
             tokens[msg.sender][tokenHash].valid = false;
 
         return true;
+    }
+
+    function toAsciiString(address x) internal pure returns (string memory) {
+    bytes memory s = new bytes(40);
+    for (uint i = 0; i < 20; i++) {
+        bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+        bytes1 hi = bytes1(uint8(b) / 16);
+        bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+        s[2*i] = char(hi);
+        s[2*i+1] = char(lo);            
+    }
+    return string(s);
+    }
+
+    function char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
+    }
+
+    function compareStrings(string memory a, string memory b) public view returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 }
