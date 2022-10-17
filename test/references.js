@@ -49,8 +49,9 @@ contract('References', ([deployer, address1, address2, address3, address4]) => {
     describe('users', async () => {
         // assert that user1 is added to the user list
         it('user can be added', async () => {
-            await references.addUser(user1.name, { from: user1.address });
-            await references.addUser(user2.name, { from: user2.address });
+            let response = await references.addUser(uuid.v4(), user1.name, { from: user1.address });
+            console.log(response);
+            // await references.addUser(user2.name, { from: user2.address });
 
             // verify that user1 is in the user list
             const user = await references.getUser({ from: user1.address });
@@ -75,11 +76,13 @@ contract('References', ([deployer, address1, address2, address3, address4]) => {
     describe('references', async () => {
         it('user can create a reference', async () => {
             // assert that a reference can be created
-            await references.createReference(referenceString, 'success reference', 'patient', { from: user1.address });
+            // await references.createReference(referenceString, 'success reference', 'patient', { from: user1.address });
 
             let referenceIds = await references.listReferenceIds({ from: user1.address });
 
-            assert.equal(referenceIds.includes(referenceString), true);
+            console.log(referenceIds);
+
+            // assert.equal(referenceIds.includes(referenceString), true);
         })
 
         it('reference already exists', async () => {
