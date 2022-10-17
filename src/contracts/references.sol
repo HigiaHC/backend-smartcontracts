@@ -79,9 +79,7 @@ contract References {
         patients[msg.sender].name = _name;
         patients[msg.sender].instanced = true;
 
-        createReference(_id, _name, "Patient", "self");
-
-        return true;
+        return createReference(_id, _name, "Patient", "self");
     }
 
     function getUser() public view returns (Patient memory) {
@@ -100,9 +98,9 @@ contract References {
             "reference_already_exists"
         );
 
-        if(compareStrings(_type, 'Patient') && patients[msg.sender].instanced){
-            return false;
-        }
+        // if(compareStrings(_type, 'Patient') && patients[msg.sender].instanced){
+        //     return false;
+        // }
 
         //add reference
         referenceIds[msg.sender].push(_id);
